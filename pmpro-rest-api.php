@@ -288,7 +288,24 @@ if ( ! class_exists( '\pmproRestAPI' ) ) {
 					array(
 						'methods'             => WP_REST_Server::READABLE,
 						'callback'            => array( $this, 'getLevelForUser' ),
-						'permission_callback' => array( $this, 'hasRESTAccessPermission' ),
+						'args'                => array(
+							'user' => array(
+								'validate_callback' => function ( $param, $request, $key ) {
+									return is_numeric( $param );
+								},
+							),
+						),
+					)
+				);
+			} );
+			
+			add_action( 'rest_api_init', function () {
+				register_rest_route(
+					'pmpro/v1',
+					'updatelevelforuser/(?P<user>\d+)/(?P<level>\d+)',
+					array(
+						'methods'             => WP_REST_Server::READABLE,
+						'callback'            => array( $this, 'updateLevelForUser' ),
 						'args'                => array(
 							'user' => array(
 								'validate_callback' => function ( $param, $request, $key ) {
@@ -383,6 +400,41 @@ if ( ! class_exists( '\pmproRestAPI' ) ) {
 			}
 			
 			return pmpro_getMembershipLevelForUser( $user_id );
+		}
+		
+		/**
+		 *
+		 * Update the PMPro Membership Level for the specified user ID
+		 *
+		 * @param WP_REST_Request $request
+		 *
+		 * @return bool|WP_Error
+		 */
+		public function updateLevelForUser( $request ) {
+			
+			if ( ! function_exists('pmpro_changeMembershipLevel') ) {
+				return new WP_Error( 'rest_forbidden', esc_html__( 'Paid Memberships Pro plugin deactivated', 'pmpro-rest-api'));
+			}
+			
+			$user_id = $request['user'];
+			$level = $request['level'];
+			
+			$this->user = get_user_by( 'ID', $user_id );
+			
+			if ( empty( $this->user ) ) {
+				
+				return new WP_Error( 'rest_forbidden', esc_html__( 'Cannot check membership level for unknown/invalid user', 'pmpro-rest-api' ) );;
+			}
+			
+			$this->logged_in = $this->user->exists();
+			
+			
+			if ( false === $this->logged_in ) {
+				
+				return new WP_Error( 'rest_forbidden', esc_html__( 'User does not have access to the PMPro REST API', 'pmpro-rest-api' ) );
+			}
+			
+			return pmpro_changeMembershipLevel( $level, $user_id );
 		}
 		
 		/**
