@@ -288,6 +288,7 @@ if ( ! class_exists( '\pmproRestAPI' ) ) {
 					array(
 						'methods'             => WP_REST_Server::READABLE,
 						'callback'            => array( $this, 'getLevelForUser' ),
+						'permission_callback' => array( $this, 'hasRESTAccessPermission' ),
 						'args'                => array(
 							'user' => array(
 								'validate_callback' => function ( $param, $request, $key ) {
@@ -306,6 +307,7 @@ if ( ! class_exists( '\pmproRestAPI' ) ) {
 					array(
 						'methods'             => WP_REST_Server::READABLE,
 						'callback'            => array( $this, 'updateLevelForUser' ),
+						'permission_callback' => array( $this, 'hasRESTAccessPermission' ),
 						'args'                => array(
 							'user' => array(
 								'validate_callback' => function ( $param, $request, $key ) {
@@ -329,7 +331,7 @@ if ( ! class_exists( '\pmproRestAPI' ) ) {
 			$required_capability = apply_filters( 'pmpro_restapi_access_role', 'manage_options' );
 			
 			if ( ! current_user_can( $required_capability ) ) {
-				return new WP_Error( 'rest_forbidden', esc_html__( "REST API Access: Permission denied", "pmpro-rest-ap" ) );
+				// return new WP_Error( 'rest_forbidden', esc_html__( "REST API Access: Permission denied", "pmpro-rest-ap" ) );
 			}
 			
 			return true;
