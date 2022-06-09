@@ -436,7 +436,13 @@ if ( ! class_exists( '\pmproRestAPI' ) ) {
 				return new WP_Error( 'rest_forbidden', esc_html__( 'User does not have access to the PMPro REST API', 'pmpro-rest-api' ) );
 			}
 			
-			return pmpro_changeMembershipLevel( $level, $user_id );
+			$level_obj = (array) pmpro_getLevel($level);
+			$level_obj['membership_id'] = $level;
+			$level_obj['user_id'] = $user_id;
+			$level_obj['startdate'] =  current_time( 'mysql' );
+			$level_obj['enddate'] =  '0000-00-00 00:00:00';
+
+			return pmpro_changeMembershipLevel( $level_obj, $user_id );
 		}
 		
 		/**
